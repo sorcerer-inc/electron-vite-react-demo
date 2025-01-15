@@ -16,3 +16,19 @@ npm i react react-dom
 npm i -D @types/react @types/react-dom
 npm i react-router-dom
 ```
+
+## install markdown
+
+```bash
+npm i react-markdown
+npm i rehype-highlight
+npm i highlight.js
+```
+
+```js
+import ReactMarkdown from "react-markdown";
+import rehypeHighlight from "rehype-highlight";
+import "highlight.js/styles/github.css";
+
+return <ReactMarkdown rehypePlugins={[rehypeHighlight]}>{markdown}</ReactMarkdown>;
+```
