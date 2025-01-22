@@ -39,3 +39,13 @@ import "highlight.js/styles/github.css";
 
 return <ReactMarkdown rehypePlugins={[rehypeHighlight]}>{markdown}</ReactMarkdown>;
 ```
+
+```bash
+npm i remark-math rehype-katex
+
+import remarkMath from 'remark-math'
+import rehypeKatex from 'rehype-katex'
+import 'katex/dist/katex.min.css'
+
+remarkPlugins={[remarkMath]} rehypePlugins={[rehypeHighlight, rehypeKatex]}
+```
