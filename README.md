@@ -1,6 +1,13 @@
 # electron + vite + typescript + react
 
-## install
+## 実行
+
+```bash
+npm i
+npm run start
+```
+
+## install 方法
 
 ### install electron,vite,typescript
 
