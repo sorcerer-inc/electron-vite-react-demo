@@ -1,6 +1,7 @@
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, ipcMain } from "electron";
 import path from "path";
 import started from "electron-squirrel-startup";
+const Database: typeof import("better-sqlite3") = require("better-sqlite3");
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
@@ -52,3 +53,17 @@ app.on("activate", () => {
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.
+
+// TODO: pathを解決
+const dbPath = path.resolve(__dirname, "../../db/test.db");
+const db = new Database(dbPath);
+db.pragma("journal_mode = WAL");
+
+function getData() {
+  const rows = db.prepare("SELECT * FROM test").all();
+  return rows;
+}
+
+ipcMain.handle("getData", async () => {
+  return getData();
+});

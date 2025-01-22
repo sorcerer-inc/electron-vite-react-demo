@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { use, useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
@@ -20,11 +20,14 @@ function App() {
         <Link to="/about">About</Link>
         <br />
         <Link to="/markdown">Markdown</Link>
+        <br />
+        <Link to="/sqlite">SQLite</Link>
       </nav>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<Count />} />
         <Route path="/markdown" element={<Markdown />} />
+        <Route path="/sqlite" element={<Sqlite />} />
       </Routes>
     </Router>
   );
@@ -66,5 +69,27 @@ function Markdown() {
     <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeHighlight, rehypeKatex]}>
       {markdown}
     </ReactMarkdown>
+  );
+}
+
+function Sqlite() {
+  const [data, setData] = useState([]);
+  const handleClick = async () => {
+    const dbData = await window.api.getData();
+    setData(dbData);
+  };
+
+  return (
+    <>
+      <h1>SQLite</h1>
+      <button onClick={handleClick}>Get Data</button>
+      <ul>
+        {data.map((row) => (
+          <li key={row.id}>
+            {row.id} - {row.name}
+          </li>
+        ))}
+      </ul>
+    </>
   );
 }

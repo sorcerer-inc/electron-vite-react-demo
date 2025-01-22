@@ -49,3 +49,54 @@ import 'katex/dist/katex.min.css'
 
 remarkPlugins={[remarkMath]} rehypePlugins={[rehypeHighlight, rehypeKatex]}
 ```
+
+## sqlite
+
+```bash
+npm i better-sqlite3
+npm i -D @types/better-sqlite3
+```
+
+```ts
+const dbPath = path.resolve(__dirname, "../../db/test.db");
+const db = new Database(dbPath);
+db.pragma("journal_mode = WAL");
+
+function getData() {
+  const rows = db.prepare("SELECT * FROM test").all();
+  return rows;
+}
+
+ipcMain.handle("getData", async () => {
+  return getData();
+});
+```
+
+## IPC 通信
+
+セキュリティのため、main process と renderer process が直接通信しない。
+だから、IPC 経由で通信する。
+
+やり方:
+
+1.  main.ts
+
+```ts
+ipcMain.handle("getData", async () => {
+  return getData();
+});
+```
+
+2. preload.ts
+
+```ts
+contextBridge.exposeInMainWorld("api", {
+  getData: async () => ipcRenderer.invoke("getData"),
+});
+```
+
+3. renderer process: react compoent
+
+```tsx
+const dbData = await window.api.getData();
+```
