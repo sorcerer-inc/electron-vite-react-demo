@@ -25,6 +25,8 @@ function App() {
         <Link to="/sqlite">SQLite</Link>
         <br />
         <Link to="/exceloutput">ExcelOutput</Link>
+        <br />
+        <Link to="/excelset">ExcelSet</Link>
       </nav>
       <Routes>
         <Route path="/" element={<Home />} />
@@ -32,6 +34,7 @@ function App() {
         <Route path="/markdown" element={<Markdown />} />
         <Route path="/sqlite" element={<Sqlite />} />
         <Route path="/exceloutput" element={<ExcelOutput />} />
+        <Route path="/excelset" element={<ExcelSet />} />
       </Routes>
     </Router>
   );
@@ -101,37 +104,10 @@ function Sqlite() {
 function ExcelOutput() {
   const handlerClickDownloadButton = async (
     e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
+    workbook: ExcelJS.Workbook,
     format: "xlsx" | "csv"
   ) => {
     e.preventDefault();
-
-    const workbook = new ExcelJS.Workbook();
-    workbook.addWorksheet("sheet1");
-    const worksheet = workbook.getWorksheet("sheet1");
-
-    worksheet.columns = [
-      { header: "ID", key: "id" },
-      { header: "作成日時", key: "createdAt" },
-      { header: "名前", key: "name" }
-    ];
-
-    worksheet.addRows([
-      {
-        id: "f001",
-        createdAt: 1629902208,
-        name: "りんご"
-      },
-      {
-        id: "f002",
-        createdAt: 1629902245,
-        name: "ぶとう"
-      },
-      {
-        id: "f003",
-        createdAt: 1629902265,
-        name: "ばなな"
-      }
-    ]);
 
     const uint8Array =
       format === "xlsx"
@@ -145,17 +121,166 @@ function ExcelOutput() {
     a.click();
     a.remove();
   };
+
+  const workbook = new ExcelJS.Workbook();
+  workbook.addWorksheet("sheet1");
+  const worksheet = workbook.getWorksheet("sheet1");
+
+  worksheet.columns = [
+    { header: "ID", key: "id", width: 7 },
+    { header: "作成日時", key: "createdAt", width: 17 },
+    { header: "名前", key: "name", width: 10 }
+  ];
+
+  worksheet.addRows([
+    {
+      id: "f001",
+      createdAt: 1629902208,
+      name: "りんご"
+    },
+    {
+      id: "f002",
+      createdAt: 1629902245,
+      name: "ぶとう"
+    },
+    {
+      id: "f003",
+      createdAt: 1629902265,
+      name: "ばなな"
+    }
+  ]);
+
+  // すべての行を走査
+  worksheet.eachRow((row, rowNumber) => {
+    // すべてのセルを走査
+    row.eachCell((cell, colNumber) => {
+      // セルの枠線を設定
+      cell.border = {
+        top: { style: 'thin', color: { argb: '000000' } },
+        left: { style: 'thin', color: { argb: '000000' } },
+        bottom: { style: 'thin', color: { argb: '000000' } },
+        right: { style: 'thin', color: { argb: '000000' } },
+      };
+    });
+    // 行の設定を適用
+    row.commit();
+  });
+
   return (
     <>
       <header>
         <h1>データ出力</h1>
       </header>
       <>
-        <button onClick={(e) => handlerClickDownloadButton(e, "xlsx")}>
+        <button onClick={(e) => handlerClickDownloadButton(e, workbook, "xlsx")}>
           Excel形式
         </button>
-        <button onClick={(e) => handlerClickDownloadButton(e, "csv")}>
+        <button onClick={(e) => handlerClickDownloadButton(e, workbook, "csv")}>
           CSV形式
+        </button>
+      </>
+    </>
+  );
+}
+  
+// インターフェース
+interface IData {
+  title: string;
+  date: string;
+  time: string;
+  userName: string;
+};
+// 初期データ
+const initialData: IData = {
+  title: '',
+  date: '',
+  time: '',
+  userName: '',
+};
+
+function ExcelSet() {
+  const handlerClickDownloadButton = async (
+    e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
+  ) => {
+    e.preventDefault();
+
+    const workbook = new ExcelJS.Workbook();
+    workbook.addWorksheet("sheet1");
+    const worksheet = workbook.getWorksheet("sheet1");
+
+    // セル位置指定
+    const cellTitle = worksheet.getCell("A2");
+    const cellDateTime = worksheet.getCell("B3");
+    const cellUserName = worksheet.getCell("C4");
+
+    // セル値上書き
+    cellTitle.value = data.title;
+    cellDateTime.value = data.date + " " + data.time;
+    cellUserName.value = data.userName;
+
+    // セル枠線
+    cellTitle.border = {
+      top: {style: "thin", color: {argb: "000000"}},
+      right: {style: "thin", color: {argb: "000000"}},
+      bottom: {style: "thin", color: {argb: "000000"}},
+      left: {style: "thin", color: {argb: "000000"}},
+    };
+    cellDateTime.border = {
+      top: {style: "thin", color: {argb: "000000"}},
+      right: {style: "thin", color: {argb: "000000"}},
+      bottom: {style: "thin", color: {argb: "000000"}},
+      left: {style: "thin", color: {argb: "000000"}},
+    };
+    cellUserName.border = {
+      top: {style: "thin", color: {argb: "000000"}},
+      right: {style: "thin", color: {argb: "000000"}},
+      bottom: {style: "thin", color: {argb: "000000"}},
+      left: {style: "thin", color: {argb: "000000"}},
+    };
+
+    const uint8Array = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([uint8Array], { type: "application/octet-binary" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "setData.xlsx";
+    a.click();
+    a.remove();
+  };
+  
+  // データ
+  const [data, setData] = useState<IData>(initialData);
+  
+  // onChange で取得
+  const onChangeTitle = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    setData({ ...data, title: value });
+  }
+  const onChangeDate = (event: React.ChangeEvent<HTMLInputElement>) => {
+      const value = event.target.value;
+      setData({ ...data, date: value });
+  }
+  const onChangeTime = (event: React.ChangeEvent<HTMLInputElement>) => {
+      const value = event.target.value;
+      setData({ ...data, time: value });
+  }
+  const onChangeUserName = (event: React.ChangeEvent<HTMLInputElement>) => {
+      const value = event.target.value;
+      setData({ ...data, userName: value });
+  }
+
+  return (
+    <>
+      <header>
+        <h1>データ出力</h1>
+      </header>
+      <>
+        <div><label>工事名：<input type="text" name="title" value={data.title} onChange={onChangeTitle} /></label></div>
+        <div><label>日時：<input type="date" name="date" value={data.date} onChange={onChangeDate} />
+          <input type="time" name="time" value={data.time} onChange={onChangeTime} /></label></div>
+        <div><label>名前：<input type="text" name="userName" value={data.userName} onChange={onChangeUserName} /></label></div>
+        <button onClick={(e) => handlerClickDownloadButton(e)}>
+          Excel出力
         </button>
       </>
     </>
