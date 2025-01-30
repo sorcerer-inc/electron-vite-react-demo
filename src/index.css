@@ -5,3 +5,26 @@ body {
   max-width: 38rem;
   padding: 2rem;
 }
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th, td {
+  border: 1px solid #000;
+  padding: 8px;
+  text-align: center;
+}
+
+@media print {
+  button {
+    display: none !important;
+  }
+  nav {
+    display: none !important;
+  }
+}
+
+
+

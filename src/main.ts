@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain } from "electron";
 import path from "path";
 import started from "electron-squirrel-startup";
+
 const Database: typeof import("better-sqlite3") = require("better-sqlite3");
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -8,9 +9,10 @@ if (started) {
   app.quit();
 }
 
+let mainWindow: BrowserWindow;
 const createWindow = () => {
   // Create the browser window.
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
     webPreferences: {
@@ -66,4 +68,29 @@ function getData() {
 
 ipcMain.handle("getData", async () => {
   return getData();
+});
+
+ipcMain.handle('savePdf', async () => {
+  try{
+
+    if (!mainWindow) {
+      throw new Error("no mainWindow");
+    }
+
+    const fs = require("fs");
+
+    const pdfDir = path.join(process.cwd(), 'pdf'); 
+    if (!fs.existsSync(pdfDir)) {
+      fs.mkdirSync(pdfDir);
+    }
+
+    const pdfPath = path.join(pdfDir, 'test.pdf');
+    const data = await mainWindow.webContents.printToPDF({});
+    fs.writeFileSync(pdfPath, data);
+  }
+  catch(error)
+  {
+    console.error(error);
+    throw error;
+  }
 });
