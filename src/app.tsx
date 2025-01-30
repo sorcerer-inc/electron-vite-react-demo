@@ -17,24 +17,27 @@ function App() {
     <Router>
       <nav>
         <Link to="/">Home</Link>
-        <br />
+        <br/>
         <Link to="/about">About</Link>
-        <br />
+        <br/>
         <Link to="/markdown">Markdown</Link>
-        <br />
+        <br/>
         <Link to="/sqlite">SQLite</Link>
-        <br />
+        <br/>
         <Link to="/exceloutput">ExcelOutput</Link>
-        <br />
+        <br/>
         <Link to="/excelset">ExcelSet</Link>
+        <br/>
+        <Link to="/exceledit">ExcelEdit</Link>
       </nav>
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={<Home/>}/>
         <Route path="/about" element={<Count />} />
         <Route path="/markdown" element={<Markdown />} />
         <Route path="/sqlite" element={<Sqlite />} />
         <Route path="/exceloutput" element={<ExcelOutput />} />
         <Route path="/excelset" element={<ExcelSet />} />
+        <Route path="/exceledit" element={<ExcelEdit />} />
       </Routes>
     </Router>
   );
@@ -133,21 +136,9 @@ function ExcelOutput() {
   ];
 
   worksheet.addRows([
-    {
-      id: "f001",
-      createdAt: 1629902208,
-      name: "りんご"
-    },
-    {
-      id: "f002",
-      createdAt: 1629902245,
-      name: "ぶとう"
-    },
-    {
-      id: "f003",
-      createdAt: 1629902265,
-      name: "ばなな"
-    }
+    { id: "f001", createdAt: 1629902208, name: "りんご" },
+    { id: "f002", createdAt: 1629902245, name: "ぶとう" },
+    { id: "f003", createdAt: 1629902265, name: "ばなな" }
   ]);
 
   // すべての行を走査
@@ -284,5 +275,89 @@ function ExcelSet() {
         </button>
       </>
     </>
+  );
+}
+
+function ExcelEdit() {
+  const handlerOnClick = async (
+      e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
+  ) => {
+    e.preventDefault();
+
+    const workbook: ExcelJS.Workbook = await window.api.readTemplate();
+    const worksheet = workbook.worksheets[0];
+
+    // セル位置指定
+    const cellTitle = worksheet.getCell("B4");
+    const cellDate = worksheet.getCell("H4");
+    const cellUserName = worksheet.getCell("H5");
+
+    // セル値上書き
+    cellTitle.value = data.title;
+    cellDate.value = data.date;
+    cellUserName.value = data.userName;
+
+    const uint8Array = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([uint8Array], { type: "application/octet-binary" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "setData.xlsx";
+    a.click();
+    a.remove();
+  };
+
+  // インターフェース
+  interface IData {
+    title: string;
+    date: string;
+    userName: string;
+  };
+
+  // 初期データ
+  const initialData: IData = {
+    title: '',
+    date: '',
+    userName: '',
+  };
+
+  const [data, setData] = useState<IData>(initialData);
+
+  const handlerOnChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const name = event.target.name;
+    const value = event.target.value;
+    switch (name) {
+      case "title":
+        setData({ ...data, title: value });
+        break;
+      case "date":
+        setData({ ...data, date: value });
+        break;
+      case "userName":
+        setData({ ...data, userName: value });
+        break;
+    }
+  };
+
+  return (
+      <>
+        <header>
+          <h1>データ出力</h1>
+        </header>
+        <>
+          <div>
+            <label>工事名：<input type="text" name="title" value={data.title} onChange={handlerOnChange} /></label>
+          </div>
+          <div>
+            <label>日時：<input type="date" name="date" value={data.date} onChange={handlerOnChange} /></label>
+          </div>
+          <div>
+            <label>名前：<input type="text" name="userName" value={data.userName} onChange={handlerOnChange} /></label>
+          </div>
+          <div>
+            <button onClick={(e) => handlerOnClick(e)}>Excel出力</button>
+          </div>
+        </>
+      </>
   );
 }

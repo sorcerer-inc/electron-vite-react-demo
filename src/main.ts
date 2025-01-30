@@ -2,6 +2,7 @@ import { app, BrowserWindow, ipcMain } from "electron";
 import path from "path";
 import started from "electron-squirrel-startup";
 const Database: typeof import("better-sqlite3") = require("better-sqlite3");
+import ExcelJS from "exceljs";
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
@@ -66,4 +67,30 @@ function getData() {
 
 ipcMain.handle("getData", async () => {
   return getData();
+});
+
+async function readTemplate() {
+  const path_excel_template = "../template/csm議事録.xlsx";
+  /*
+  const file = await fetch(path_exceltemplate);
+  const aBuffer = await file.arrayBuffer();
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.load(aBuffer);
+  */
+  const workbook = new ExcelJS.Workbook();
+  try {
+    await workbook.xlsx.readFile(path_excel_template);
+    const sheet = workbook.worksheets[0];
+    if (!sheet) {
+      console.log('シートが見つかりません');
+      return;
+    }
+  } catch (err) {
+    console.error('エラーが発生しました:', err);
+  }
+  return workbook;
+}
+
+ipcMain.handle("readTemplate", async () => {
+  return await readTemplate();
 });
