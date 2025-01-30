@@ -69,28 +69,27 @@ ipcMain.handle("getData", async () => {
   return getData();
 });
 
-async function readTemplate() {
-  const path_excel_template = "../template/csm議事録.xlsx";
-  /*
-  const file = await fetch(path_exceltemplate);
-  const aBuffer = await file.arrayBuffer();
-  const workbook = new ExcelJS.Workbook();
-  await workbook.xlsx.load(aBuffer);
-  */
+async function readTemplateBuffer() {
+  const path_excel_template = path.resolve(__dirname, "../../template/csm議事録.xltx");
+  console.log('readTemplate. path_excel_template:', path_excel_template);
+
   const workbook = new ExcelJS.Workbook();
   try {
+    console.log('readTemplate. xlsx.readFile');
     await workbook.xlsx.readFile(path_excel_template);
-    const sheet = workbook.worksheets[0];
-    if (!sheet) {
-      console.log('シートが見つかりません');
-      return;
-    }
   } catch (err) {
-    console.error('エラーが発生しました:', err);
+    console.error('readTemplate. エラーが発生しました:', err);
   }
-  return workbook;
+  if (workbook.worksheets.length == 0) {
+    throw new Error("readTemplate. テンプレートExcelにシートが見つかりません");
+  }
+  const sheet = workbook.worksheets[0];
+  console.log('readTemplate. sheet.name:', sheet.name);
+
+  // バッファ形式で渡し、クライアント側でロードする
+  return workbook.xlsx.writeBuffer();
 }
 
-ipcMain.handle("readTemplate", async () => {
-  return await readTemplate();
+ipcMain.handle("readTemplateBuffer", async () => {
+  return readTemplateBuffer();
 });

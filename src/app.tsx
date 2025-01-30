@@ -173,21 +173,6 @@ function ExcelOutput() {
     </>
   );
 }
-  
-// インターフェース
-interface IData {
-  title: string;
-  date: string;
-  time: string;
-  userName: string;
-};
-// 初期データ
-const initialData: IData = {
-  title: '',
-  date: '',
-  time: '',
-  userName: '',
-};
 
 function ExcelSet() {
   const handlerClickDownloadButton = async (
@@ -239,6 +224,22 @@ function ExcelSet() {
     a.remove();
   };
   
+  // インターフェース
+  interface IData {
+    title: string;
+    date: string;
+    time: string;
+    userName: string;
+  };
+
+  // 初期データ
+  const initialData: IData = {
+    title: '',
+    date: '',
+    time: '',
+    userName: '',
+  };  
+  
   // データ
   const [data, setData] = useState<IData>(initialData);
   
@@ -283,26 +284,44 @@ function ExcelEdit() {
       e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
   ) => {
     e.preventDefault();
+    console.log("ExcelEdit. onClick", {data});
 
-    const workbook: ExcelJS.Workbook = await window.api.readTemplate();
-    const worksheet = workbook.worksheets[0];
+    let workbook = new ExcelJS.Workbook();
+    let worksheet = workbook.worksheets[0];
+    try {
+      // テンプレート読み込み
+      console.log("ExcelEdit. readTemplateBuffer");
+      await workbook.xlsx.load(await window.api.readTemplateBuffer());
 
-    // セル位置指定
-    const cellTitle = worksheet.getCell("B4");
-    const cellDate = worksheet.getCell("H4");
-    const cellUserName = worksheet.getCell("H5");
+      // シート指定
+      if (workbook.worksheets.length == 0) {
+        throw new Error("ExcelEdit. テンプレートExcelにシートが見つかりません");
+      }
+      worksheet = workbook.worksheets[0]; // 1シート目
+      console.log("ExcelEdit. getWorksheet", worksheet.name);
 
-    // セル値上書き
-    cellTitle.value = data.title;
-    cellDate.value = data.date;
-    cellUserName.value = data.userName;
+      console.log("ExcelEdit. editing...");
+      // セル位置指定
+      const cellTitle = worksheet.getCell("B4");
+      const cellDate = worksheet.getCell("H4");
+      const cellUserName = worksheet.getCell("H5");
+  
+      // セル値上書き
+      cellTitle.value = data.title;
+      cellDate.value = data.date;
+      cellUserName.value = data.userName;
+    } catch (error) {
+      console.log("ExcelEdit. error:", error);
+      return;
+    }
 
+    // ダウンロード出力
     const uint8Array = await workbook.xlsx.writeBuffer();
     const blob = new Blob([uint8Array], { type: "application/octet-binary" });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "setData.xlsx";
+    a.download = "csm議事録.xlsx";
     a.click();
     a.remove();
   };
