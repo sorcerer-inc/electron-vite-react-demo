@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain } from "electron";
 import path from "path";
 import started from "electron-squirrel-startup";
+import ExcelJS from "exceljs";
 
 const Database: typeof import("better-sqlite3") = require("better-sqlite3");
 
@@ -79,7 +80,7 @@ ipcMain.handle('savePdf', async () => {
 
     const fs = require("fs");
 
-    const pdfDir = path.join(process.cwd(), 'pdf'); 
+    const pdfDir = path.join(process.cwd(), 'pdf');
     if (!fs.existsSync(pdfDir)) {
       fs.mkdirSync(pdfDir);
     }
@@ -93,4 +94,32 @@ ipcMain.handle('savePdf', async () => {
     console.error(error);
     throw error;
   }
+});
+
+async function readTemplateBuffer() {
+  const path_excel_template = path.resolve(__dirname, "../../template/csm議事録.xltx");
+  console.log('readTemplate. path_excel_template:', path_excel_template);
+
+  const workbook = new ExcelJS.Workbook();
+  try {
+    console.log('readTemplate. xlsx.readFile');
+    await workbook.xlsx.readFile(path_excel_template);
+  } catch (err) {
+    console.error('readTemplate. エラーが発生しました:', err);
+    throw err;
+  }
+
+  // シートの存在チェック
+  if (workbook.worksheets.length == 0) {
+    throw new Error("readTemplate. テンプレートExcelにシートが見つかりません");
+  }
+  const sheet = workbook.worksheets[0];
+  console.log('readTemplate. sheet.name:', sheet.name);
+
+  // バッファ形式で渡し、クライアント側でロードする
+  return workbook.xlsx.writeBuffer();
+}
+
+ipcMain.handle("readTemplateBuffer", async () => {
+  return readTemplateBuffer();
 });
