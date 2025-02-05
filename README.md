@@ -19,6 +19,7 @@ npx create-electron-app@latest my-app --template=vite-typescript
 ### install react, react-router-dom
 
 ```bash
+cd my-app
 npm i react react-dom
 npm i -D @types/react @types/react-dom
 npm i react-router-dom
